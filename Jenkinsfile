@@ -9,7 +9,7 @@ pipeline {
         FRONTEND_DIR = "frontend"
         BACKEND_DIR = "backend"
         K8S_MANIFEST_DIR = "k8s-manifests"
-        SONAR_URL = "http://localhost:9000"
+        SONAR_URL = "http://192.168.0.55:9000"
         DOCKER_REGISTRY = "kadhir812"
         BACKEND_IMAGE = "${DOCKER_REGISTRY}/backend:${BUILD_NUMBER}"
         FRONTEND_IMAGE = "${DOCKER_REGISTRY}/frontend:${BUILD_NUMBER}"
@@ -21,7 +21,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-repo/three-tier-app.git'
+                git branch: 'master', url: 'https://github.com/Kadhir812/End-to-End-CI-CD-Implementation.git'
             }
         }
         stage('Start MongoDB in Minikube') {
@@ -31,7 +31,7 @@ pipeline {
                     sh 'eval $(minikube docker-env)'
                     
                     // Run MongoDB container in Minikube
-                    sh 'docker run -d --name mongodb --network host -p 27017:27017 mongo:5.0'
+                    sh 'docker run -d --name mongodb --network ci-cd-network -p 27017:27017 mongo:7.0'
                 }
             }
         }
