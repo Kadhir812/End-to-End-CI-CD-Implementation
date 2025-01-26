@@ -115,16 +115,18 @@ pipeline {
                             git config --global user.email "${GIT_EMAIL}"
                             git config --global user.name "${GIT_USER_NAME}"
 
-                            # Update Kubernetes manifests
-                            sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
-                            sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
+                            # Update Kubernetes manifests with the new image tags
+                            # Update the backend image tag (fixed name + build number)
+                            sed -i "s|image: todosp-backend:.*|image: todosp-backend:${BUILD_NUMBER}|g" backend-deployment.yaml
+                            # Update the frontend image tag (fixed name + build number)
+                            sed -i "s|image: todosp-frontend:.*|image: todosp-frontend:${BUILD_NUMBER}|g" frontend-deployment.yaml
 
                             # Commit and push the changes
                             git add backend-deployment.yaml frontend-deployment.yaml
-                            git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}, frontend: ${FRONTEND_IMAGE}"
+                            git commit -m "Update deployment images to backend: todosp-backend:${BUILD_NUMBER}, frontend: todosp-frontend:${BUILD_NUMBER}"
 
                             # Push securely to GitHub
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
 
                             # Restore shell logging
                             set -x
