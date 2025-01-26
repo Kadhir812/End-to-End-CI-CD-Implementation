@@ -13,10 +13,10 @@ pipeline {
         DOCKER_REGISTRY = "kadhir812"
         BACKEND_IMAGE = "${DOCKER_REGISTRY}/backend:${BUILD_NUMBER}"
         FRONTEND_IMAGE = "${DOCKER_REGISTRY}/frontend:${BUILD_NUMBER}"
-        ARGOCD_SERVER = "http://argocd-server:8080"  // ArgoCD Server URL
-        ARGOCD_APP_NAME = "todo_app"  // ArgoCD Application name
-        ARGOCD_USER = "admin"  // ArgoCD user (default: admin)
-        ARGOCD_PASSWORD = "Immunoglobin"  // ArgoCD password
+        // ARGOCD_SERVER = "http://argocd-server:8080"
+        // ARGOCD_APP_NAME = "todo_app"
+        // ARGOCD_USER = "admin"
+        // ARGOCD_PASSWORD = "Immunoglobin"
     }
     stages {
         stage('Checkout Code') {
@@ -24,13 +24,17 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/Kadhir812/End-to-End-CI-CD-Implementation.git'
             }
         }
+        stage('Set Workspace Permissions') {
+            steps {
+                script {
+                    sh 'chmod -R 755 ${WORKSPACE}'
+                }
+            }
+        }
         stage('Start MongoDB in Minikube') {
             steps {
                 script {
-                    // Set the Docker environment to Minikube
                     sh 'eval $(minikube docker-env)'
-                    
-                    // Run MongoDB container in Minikube
                     sh 'docker run -d --name mongodb --network ci-cd-network -p 27017:27017 mongo:7.0'
                 }
             }
@@ -38,9 +42,7 @@ pipeline {
         stage('Build and Test Backend') {
             steps {
                 dir(BACKEND_DIR) {
-                    // Clean and build the Spring Boot Maven project
                     sh 'mvn clean package'
-                    // Run unit tests and generate reports
                     sh 'mvn test'
                 }
             }
@@ -54,11 +56,11 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
                     dir(BACKEND_DIR) {
-                        sh """
+                        sh '''
                         mvn sonar:sonar \
                             -Dsonar.login=${SONAR_AUTH_TOKEN} \
                             -Dsonar.host.url=${SONAR_URL}
-                        """
+                        '''
                     }
                 }
             }
@@ -66,18 +68,20 @@ pipeline {
         stage('Build and Push Backend Docker Image') {
             steps {
                 dir(BACKEND_DIR) {
-                    sh """
-                    docker build -t ${BACKEND_IMAGE} .
-                    docker push ${BACKEND_IMAGE}
-                    """
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                        docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+                        docker build -t ${BACKEND_IMAGE} .
+                        docker push ${BACKEND_IMAGE}
+                        '''
+                    }
                 }
             }
         }
         stage('Build and Test Frontend') {
             steps {
                 dir(FRONTEND_DIR) {
-                    // Install dependencies and build the Vite app
-                    sh 'npm install'
+                    sh 'npm ci'
                     sh 'npm run build'
                 }
             }
@@ -85,27 +89,45 @@ pipeline {
         stage('Build and Push Frontend Docker Image') {
             steps {
                 dir(FRONTEND_DIR) {
-                    sh """
-                    docker build -t ${FRONTEND_IMAGE} .
-                    docker push ${FRONTEND_IMAGE}
-                    """
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                        docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+                        docker build -t ${FRONTEND_IMAGE} .
+                        docker push ${FRONTEND_IMAGE}
+                        '''
+                    }
                 }
             }
         }
         stage('Update Kubernetes Manifests') {
             steps {
                 dir(K8S_MANIFEST_DIR) {
-                    // Replace image tags dynamically in the Kubernetes manifests
-                    sh """
+                    sh '''
                     sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
                     sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
-                    """
+                    '''
                 }
             }
         }
-    }
+    //     stage('Sync with ArgoCD') {
+    //         steps {
+    //             script {
+    //                 // Log into ArgoCD using credentials
+    //                 withCredentials([usernamePassword(credentialsId: 'argocd-credentials', usernameVariable: 'ARGOCD_USER', passwordVariable: 'ARGOCD_PASSWORD')]) {
+    //                     sh '''
+    //                         # Log into ArgoCD
+    //                         argocd login ${ARGOCD_SERVER} --username ${ARGOCD_USER} --password ${ARGOCD_PASSWORD} --insecure
+    //                         # Sync the application to deploy it
+    //                         argocd app sync ${ARGOCD_APP_NAME}
+    //                     '''
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     post {
         always {
+            echo 'Cleaning workspace...'
             cleanWs()
         }
         success {
