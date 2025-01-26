@@ -14,9 +14,9 @@ pipeline {
         BACKEND_IMAGE = "${DOCKER_REGISTRY}/backend:${BUILD_NUMBER}"
         FRONTEND_IMAGE = "${DOCKER_REGISTRY}/frontend:${BUILD_NUMBER}"
         ARGOCD_SERVER = "http://argocd-server:8080"  // ArgoCD Server URL
-        ARGOCD_APP_NAME = "my-app"  // ArgoCD Application name
+        ARGOCD_APP_NAME = "todo_app"  // ArgoCD Application name
         ARGOCD_USER = "admin"  // ArgoCD user (default: admin)
-        ARGOCD_PASSWORD = "argocd-server-password"  // ArgoCD password
+        ARGOCD_PASSWORD = "Immunoglobin"  // ArgoCD password
     }
     stages {
         stage('Checkout Code') {
@@ -99,26 +99,6 @@ pipeline {
                     sh """
                     sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
                     sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
-                    """
-                }
-            }
-        }
-        stage('Sync with ArgoCD to Deploy') {
-            steps {
-                script {
-                    // Login to ArgoCD
-                    sh """
-                    argocd login ${ARGOCD_SERVER} --username ${ARGOCD_USER} --password ${ARGOCD_PASSWORD} --insecure
-                    """
-
-                    // Sync the ArgoCD application to apply changes
-                    sh """
-                    argocd app sync ${ARGOCD_APP_NAME}
-                    """
-
-                    // Optionally, wait for the deployment to finish
-                    sh """
-                    argocd app wait ${ARGOCD_APP_NAME} --sync
                     """
                 }
             }
