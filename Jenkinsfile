@@ -13,10 +13,9 @@ pipeline {
         DOCKER_REGISTRY = "kadhir812"
         BACKEND_IMAGE = "${DOCKER_REGISTRY}/backend:${BUILD_NUMBER}"
         FRONTEND_IMAGE = "${DOCKER_REGISTRY}/frontend:${BUILD_NUMBER}"
-        // ARGOCD_SERVER = "http://argocd-server:8080"
-        // ARGOCD_APP_NAME = "todo_app"
-        // ARGOCD_USER = "admin"
-        // ARGOCD_PASSWORD = "Immunoglobin"
+        GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
+        GIT_USER_NAME = "kadhir812"
+        GIT_EMAIL = "kadhir555666@gmail.com"
     }
     stages {
         stage('Checkout Code') {
@@ -80,16 +79,16 @@ pipeline {
         }
         stage('Build and Test Frontend') {
             steps {
-        script {
-            docker.image('node:16').inside {
-                dir(FRONTEND_DIR) {
-                    sh 'npm ci'
-                    sh 'npm run build'
+                script {
+                    docker.image('node:16').inside {
+                        dir(FRONTEND_DIR) {
+                            sh 'npm ci'
+                            sh 'npm run build'
+                        }
+                    }
                 }
             }
         }
-    }
-}
         stage('Build and Push Frontend Docker Image') {
             steps {
                 dir(FRONTEND_DIR) {
@@ -103,32 +102,39 @@ pipeline {
                 }
             }
         }
-        stage('Update Kubernetes Manifests') {
+        stage('Update and Commit Kubernetes Manifests') {
             steps {
-                dir(K8S_MANIFEST_DIR) {
-                    sh '''
-                    sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
-                    sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
-                    '''
+                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    dir(K8S_MANIFEST_DIR) {
+                        script {
+                            sh '''
+                            # Ensure sensitive commands are not logged
+                            set +x
+
+                            # Configure Git
+                            git config --global user.email "${GIT_EMAIL}"
+                            git config --global user.name "${GIT_USER_NAME}"
+
+                            # Update Kubernetes manifests
+                            sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
+                            sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
+
+                            # Commit and push the changes
+                            git add backend-deployment.yaml frontend-deployment.yaml
+                            git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}, frontend: ${FRONTEND_IMAGE}"
+
+                            # Push securely to GitHub
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+
+                            # Restore shell logging
+                            set -x
+                            '''
+                        }
+                    }
                 }
             }
         }
-    //     stage('Sync with ArgoCD') {
-    //         steps {
-    //             script {
-    //                 // Log into ArgoCD using credentials
-    //                 withCredentials([usernamePassword(credentialsId: 'argocd-credentials', usernameVariable: 'ARGOCD_USER', passwordVariable: 'ARGOCD_PASSWORD')]) {
-    //                     sh '''
-    //                         # Log into ArgoCD
-    //                         argocd login ${ARGOCD_SERVER} --username ${ARGOCD_USER} --password ${ARGOCD_PASSWORD} --insecure
-    //                         # Sync the application to deploy it
-    //                         argocd app sync ${ARGOCD_APP_NAME}
-    //                     '''
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    }
     post {
         always {
             echo 'Cleaning workspace...'
