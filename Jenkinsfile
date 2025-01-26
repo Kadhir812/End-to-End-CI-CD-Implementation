@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'maven:3.9.0-openjdk-17'  // Use Maven with JDK 17
+            image 'abhishekf5/maven-abhishek-docker-agent:v1'
             args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
@@ -13,6 +13,10 @@ pipeline {
         DOCKER_REGISTRY = "kadhir812"
         BACKEND_IMAGE = "${DOCKER_REGISTRY}/backend:${BUILD_NUMBER}"
         FRONTEND_IMAGE = "${DOCKER_REGISTRY}/frontend:${BUILD_NUMBER}"
+        // ARGOCD_SERVER = "http://argocd-server:8080"
+        // ARGOCD_APP_NAME = "todo_app"
+        // ARGOCD_USER = "admin"
+        // ARGOCD_PASSWORD = "Immunoglobin"
     }
     stages {
         stage('Checkout Code') {
@@ -105,7 +109,22 @@ pipeline {
                 }
             }
         }
-    }
+    //     stage('Sync with ArgoCD') {
+    //         steps {
+    //             script {
+    //                 // Log into ArgoCD using credentials
+    //                 withCredentials([usernamePassword(credentialsId: 'argocd-credentials', usernameVariable: 'ARGOCD_USER', passwordVariable: 'ARGOCD_PASSWORD')]) {
+    //                     sh '''
+    //                         # Log into ArgoCD
+    //                         argocd login ${ARGOCD_SERVER} --username ${ARGOCD_USER} --password ${ARGOCD_PASSWORD} --insecure
+    //                         # Sync the application to deploy it
+    //                         argocd app sync ${ARGOCD_APP_NAME}
+    //                     '''
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     post {
         always {
             echo 'Cleaning workspace...'
