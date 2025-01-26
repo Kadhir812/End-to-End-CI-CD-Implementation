@@ -80,12 +80,16 @@ pipeline {
         }
         stage('Build and Test Frontend') {
             steps {
+        script {
+            docker.image('node:16').inside {
                 dir(FRONTEND_DIR) {
                     sh 'npm ci'
                     sh 'npm run build'
                 }
             }
         }
+    }
+}
         stage('Build and Push Frontend Docker Image') {
             steps {
                 dir(FRONTEND_DIR) {
