@@ -124,7 +124,7 @@ pipeline {
                             git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}, frontend: ${FRONTEND_IMAGE}"
 
                             # Push securely to GitHub
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
 
                             # Restore shell logging
                             set -x
