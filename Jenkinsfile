@@ -11,8 +11,8 @@ pipeline {
         K8S_MANIFEST_DIR = "k8s-manifests"
         SONAR_URL = "http://192.168.0.55:9000"
         DOCKER_REGISTRY = "kadhir812"
-        BACKEND_IMAGE = "${DOCKER_REGISTRY}/backend:${BUILD_NUMBER}"
-        FRONTEND_IMAGE = "${DOCKER_REGISTRY}/frontend:${BUILD_NUMBER}"
+        BACKEND_IMAGE = "${DOCKER_REGISTRY}/todospring-backend:${BUILD_NUMBER}"
+        FRONTEND_IMAGE = "${DOCKER_REGISTRY}/todospring-frontend:${BUILD_NUMBER}"
         GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
         GIT_USER_NAME = "kadhir812"
         GIT_EMAIL = "kadhir555666@gmail.com"
@@ -102,38 +102,40 @@ pipeline {
                 }
             }
         }
+        // New stage added here
         stage('Update and Commit Kubernetes Manifests') {
-    steps {
-        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-            dir(K8S_MANIFEST_DIR) {
-                script {
-                    sh '''
-                    # Ensure sensitive commands are not logged
-                    set +x
+            steps {
+                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    dir(K8S_MANIFEST_DIR) {
+                        script {
+                            sh '''
+                            # Ensure sensitive commands are not logged
+                            set +x
 
-                    # Configure Git
-                    git config --global user.email "${GIT_EMAIL}"
-                    git config --global user.name "${GIT_USER_NAME}"
+                            # Configure Git
+                            git config --global user.email "${GIT_EMAIL}"
+                            git config --global user.name "${GIT_USER_NAME}"
 
-                    # Update Kubernetes manifests with build number
-                    sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}:${BUILD_NUMBER}|g" backend-deployment.yaml
-                    sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}:${BUILD_NUMBER}|g" frontend-deployment.yaml
+                            # Update Kubernetes manifests with build number
+                            sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
+                            sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
 
-                    # Commit and push the changes
-                    git add backend-deployment.yaml frontend-deployment.yaml
-                    git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}:${BUILD_NUMBER}, frontend: ${FRONTEND_IMAGE}:${BUILD_NUMBER} [Build: ${BUILD_NUMBER}]"
+                            # Commit and push the changes
+                            git add backend-deployment.yaml frontend-deployment.yaml
+                            git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}, frontend: ${FRONTEND_IMAGE} [Build: ${BUILD_NUMBER}]"
 
-                    # Push securely to GitHub
-                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
+                            # Push securely to GitHub
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
 
-                    # Restore shell logging
-                    set -x
-                    '''
+                            # Restore shell logging
+                            set -x
+                            '''
+                        }
+                    }
                 }
             }
         }
     }
-}
     post {
         always {
             echo 'Cleaning workspace...'
@@ -143,7 +145,7 @@ pipeline {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check the logs for more details.'
+            echo 'Pipeline failed. Check the log for more details.'
         }
     }
 }
