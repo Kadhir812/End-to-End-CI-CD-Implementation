@@ -11,8 +11,8 @@ pipeline {
         K8S_MANIFEST_DIR = "k8s-manifests"
         SONAR_URL = "http://192.168.0.55:9000"
         DOCKER_REGISTRY = "kadhir812"
-        BACKEND_IMAGE = "${DOCKER_REGISTRY}/backend:${BUILD_NUMBER}"
-        FRONTEND_IMAGE = "${DOCKER_REGISTRY}/frontend:${BUILD_NUMBER}"
+        BACKEND_IMAGE = "${DOCKER_REGISTRY}/todospring-backend:${BUILD_NUMBER}"
+        FRONTEND_IMAGE = "${DOCKER_REGISTRY}/todospring-frontend:${BUILD_NUMBER}"
         GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
         GIT_USER_NAME = "kadhir812"
         GIT_EMAIL = "kadhir555666@gmail.com"
@@ -102,6 +102,7 @@ pipeline {
                 }
             }
         }
+        // New stage added here
         stage('Update and Commit Kubernetes Manifests') {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
@@ -115,13 +116,13 @@ pipeline {
                             git config --global user.email "${GIT_EMAIL}"
                             git config --global user.name "${GIT_USER_NAME}"
 
-                            # Update Kubernetes manifests
+                            # Update Kubernetes manifests with build number
                             sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
                             sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
 
                             # Commit and push the changes
                             git add backend-deployment.yaml frontend-deployment.yaml
-                            git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}, frontend: ${FRONTEND_IMAGE}"
+                            git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}, frontend: ${FRONTEND_IMAGE} [Build: ${BUILD_NUMBER}]"
 
                             # Push securely to GitHub
                             git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
