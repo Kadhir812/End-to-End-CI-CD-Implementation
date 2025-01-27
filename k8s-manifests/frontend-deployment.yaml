@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: todoapring-frontend
-        image: kadhir812/frontend:11
+        image: REPLACE_FRONTEND_IMAGE
         ports:
         - containerPort: 5173
 ---
