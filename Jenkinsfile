@@ -127,22 +127,23 @@ pipeline {
                             sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
                             '''
 
-                            // Configure Git
+                         
+                            // Stage only the modified manifest files
+                            sh '''
+                            git add .
+                            '''
+
+                             // Configure Git
                             sh '''
                             git config --global user.email "${GIT_EMAIL}"
                             git config --global user.name "${GIT_USER_NAME}"
-                            '''
-
-                            // Stage only the modified manifest files
-                            sh '''
-                            git add backend-deployment.yaml frontend-deployment.yaml
                             '''
 
                             // Commit the changes
                             sh '''
                             git commit -m "Update Kubernetes manifests with new images: backend ${BACKEND_IMAGE}, frontend ${FRONTEND_IMAGE} [Build: ${BUILD_NUMBER}]"
                             '''
-
+                           
                             // Push to GitHub
                             sh '''
                             git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
