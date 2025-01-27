@@ -16,11 +16,15 @@ pipeline {
         GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
         GIT_USER_NAME = "kadhir812"
         GIT_EMAIL = "kadhir555666@gmail.com"
+        GIT_BRANCH = "master" // Parameterize branch for flexibility
+    }
+    parameters {
+        string(name: 'GIT_BRANCH', defaultValue: 'master', description: 'Git branch to build from')
     }
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'master', url: 'https://github.com/Kadhir812/End-to-End-CI-CD-Implementation.git'
+                git branch: "${params.GIT_BRANCH}", url: "https://github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}.git"
             }
         }
         stage('Set Workspace Permissions') {
@@ -34,7 +38,11 @@ pipeline {
             steps {
                 script {
                     sh 'eval $(minikube docker-env)'
-                    sh 'docker run -d --name mongodb --network ci-cd-network -p 27017:27017 mongo:7.0'
+                    sh '''
+                    if ! docker ps | grep -q mongodb; then
+                        docker run -d --name mongodb --network ci-cd-network -p 27017:27017 mongo:7.0
+                    fi
+                    '''
                 }
             }
         }
@@ -102,32 +110,23 @@ pipeline {
                 }
             }
         }
-        // New stage added here
         stage('Update and Commit Kubernetes Manifests') {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     dir(K8S_MANIFEST_DIR) {
                         script {
                             sh '''
-                            # Ensure sensitive commands are not logged
                             set +x
-
-                            # Configure Git
                             git config --global user.email "${GIT_EMAIL}"
                             git config --global user.name "${GIT_USER_NAME}"
 
-                            # Update Kubernetes manifests with build number
                             sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
                             sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
 
-                            # Commit and push the changes
                             git add backend-deployment.yaml frontend-deployment.yaml
-                            git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}, frontend: ${FRONTEND_IMAGE} [Build: ${BUILD_NUMBER}]"
+                            git commit -m "Update Kubernetes manifests [Build: ${BUILD_NUMBER}]"
 
-                            # Push securely to GitHub
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-
-                            # Restore shell logging
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${params.GIT_BRANCH}
                             set -x
                             '''
                         }
