@@ -110,7 +110,18 @@ pipeline {
                 }
             }
         }
-        stage('Update and Commit Kubernetes Manifests') {
+        stage('Update Kubernetes Manifests') {
+            steps {
+                script {
+                    // Modify the manifests with the new images
+                    sh '''
+                    sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
+                    sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
+                    '''
+                }
+            }
+        }
+        stage('Add Kubernetes Manifests to Git') {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     dir(K8S_MANIFEST_DIR) {
@@ -119,15 +130,22 @@ pipeline {
                             set +x
                             git config --global user.email "${GIT_EMAIL}"
                             git config --global user.name "${GIT_USER_NAME}"
-
-                            sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
-                            sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
-
                             git add backend-deployment.yaml frontend-deployment.yaml
-                            git commit -m "Update Kubernetes manifests [Build: ${BUILD_NUMBER}]"
-
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${params.GIT_BRANCH}
                             set -x
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        stage('Commit and Push Kubernetes Manifests') {
+            steps {
+                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    dir(K8S_MANIFEST_DIR) {
+                        script {
+                            sh '''
+                            git commit -m "Update Kubernetes manifests with new images: backend ${BACKEND_IMAGE}, frontend ${FRONTEND_IMAGE} [Build: ${BUILD_NUMBER}]"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${params.GIT_BRANCH}
                             '''
                         }
                     }
