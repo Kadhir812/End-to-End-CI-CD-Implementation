@@ -15,8 +15,8 @@ spec:
         app: backend
     spec:
       containers:
-      - name: REPLACE_BACKEND_IMAGE
-        image:  kadhir812/backend:11  # This will be replaced by Jenkins dynamically
+      - name: todospr_backend
+        image:   REPLACE_BACKEND_IMAGE # This will be replaced by Jenkins dynamically
         ports:
         - containerPort: 8080
         env:
