@@ -122,17 +122,20 @@ pipeline {
                             '''
 
                             // Configure Git
-                            set +x
+                            sh '''
                             git config --global user.email "${GIT_EMAIL}"
                             git config --global user.name "${GIT_USER_NAME}"
+                            '''
 
                             // Stage and commit the changes
+                            sh '''
                             git add backend-deployment.yaml frontend-deployment.yaml
                             git commit -m "Update Kubernetes manifests with new images: backend ${BACKEND_IMAGE}, frontend ${FRONTEND_IMAGE} [Build: ${BUILD_NUMBER}]"
+                            '''
 
                             // Push to GitHub
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${params.GIT_BRANCH}
-                            set -x
+                            sh '''
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
                             '''
                         }
                     }
