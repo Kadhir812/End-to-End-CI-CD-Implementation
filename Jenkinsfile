@@ -16,15 +16,12 @@ pipeline {
         GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
         GIT_USER_NAME = "kadhir812"
         GIT_EMAIL = "kadhir555666@gmail.com"
-        GIT_BRANCH = "master" // Parameterize branch for flexibility
-    }
-    parameters {
-        string(name: 'GIT_BRANCH', defaultValue: 'master', description: 'Git branch to build from')
+        GIT_BRANCH = "master" // Fixed branch name
     }
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: "${params.GIT_BRANCH}", url: "https://github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}.git"
+                git branch: "${GIT_BRANCH}", url: "https://github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}.git"
             }
         }
         stage('Set Workspace Permissions') {
@@ -115,7 +112,16 @@ pipeline {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     dir(K8S_MANIFEST_DIR) {
                         script {
-                            // Modify the manifests with the new images
+                            // Ensure sensitive commands are not logged
+                            sh 'set +x'
+
+                            // Clean the workspace
+                            sh '''
+                            git reset --hard HEAD
+                            git clean -fd
+                            '''
+
+                            // Update Kubernetes manifests with the new images
                             sh '''
                             sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
                             sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
@@ -127,9 +133,13 @@ pipeline {
                             git config --global user.name "${GIT_USER_NAME}"
                             '''
 
-                            // Stage and commit the changes
+                            // Stage only the modified manifest files
                             sh '''
                             git add backend-deployment.yaml frontend-deployment.yaml
+                            '''
+
+                            // Commit the changes
+                            sh '''
                             git commit -m "Update Kubernetes manifests with new images: backend ${BACKEND_IMAGE}, frontend ${FRONTEND_IMAGE} [Build: ${BUILD_NUMBER}]"
                             '''
 
@@ -137,6 +147,9 @@ pipeline {
                             sh '''
                             git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
                             '''
+
+                            // Restore shell logging
+                            sh 'set -x'
                         }
                     }
                 }
