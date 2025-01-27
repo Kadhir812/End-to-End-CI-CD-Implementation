@@ -121,16 +121,16 @@ pipeline {
                             git clean -fd
                             '''
 
-                            // Update Kubernetes manifests with the new images
-                            sh '''
-                            sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
-                            sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
-                            '''
-
                             // Configure Git
                             sh '''
                             git config --global user.email "${GIT_EMAIL}"
                             git config --global user.name "${GIT_USER_NAME}"
+                            '''
+
+                            // Update Kubernetes manifests with the new images
+                            sh '''
+                            sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
+                            sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
                             '''
 
                             // Stage only the modified manifest files
