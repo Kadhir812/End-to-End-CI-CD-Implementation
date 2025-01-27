@@ -123,7 +123,7 @@ pipeline {
                         sh '''
                         git config user.email "${GIT_EMAIL}"
                         git config user.name "${GIT_USER_NAME}"
-                        sed -i 's|replaceFrontendImage|${FRONTEND_IMAGE}|g' frontend-deployment.yaml
+                        sed -i 's|replaceFrontendImage|'"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
 
                         git add frontend-deployment.yaml
                         git commit -m "Update frontend deployment image to version ${BUILD_NUMBER}"
@@ -144,7 +144,7 @@ pipeline {
                         sh '''
                         git config user.email "${GIT_EMAIL}"
                         git config user.name "${GIT_USER_NAME}"
-                        sed -i 's|replaceBackendImage|${BACKEND_IMAGE}|g' backend-deployment.yaml
+                        sed -i 's|replaceBackendImage|'"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
                         git add backend-deployment.yaml
                         git commit -m "Update backend deployment image to version ${BUILD_NUMBER}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
