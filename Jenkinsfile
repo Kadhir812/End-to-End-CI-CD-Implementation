@@ -103,38 +103,37 @@ pipeline {
             }
         }
         stage('Update and Commit Kubernetes Manifests') {
-            steps {
-                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    dir(K8S_MANIFEST_DIR) {
-                        script {
-                            sh '''
-                            # Ensure sensitive commands are not logged
-                            set +x
+    steps {
+        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+            dir(K8S_MANIFEST_DIR) {
+                script {
+                    sh '''
+                    # Ensure sensitive commands are not logged
+                    set +x
 
-                            # Configure Git
-                            git config --global user.email "${GIT_EMAIL}"
-                            git config --global user.name "${GIT_USER_NAME}"
+                    # Configure Git
+                    git config --global user.email "${GIT_EMAIL}"
+                    git config --global user.name "${GIT_USER_NAME}"
 
-                            # Update Kubernetes manifests
-                            sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
-                            sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
+                    # Update Kubernetes manifests with build number
+                    sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}:${BUILD_NUMBER}|g" backend-deployment.yaml
+                    sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}:${BUILD_NUMBER}|g" frontend-deployment.yaml
 
-                            # Commit and push the changes
-                            git add backend-deployment.yaml frontend-deployment.yaml
-                            git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}, frontend: ${FRONTEND_IMAGE}"
+                    # Commit and push the changes
+                    git add backend-deployment.yaml frontend-deployment.yaml
+                    git commit -m "Update deployment images to backend: ${BACKEND_IMAGE}:${BUILD_NUMBER}, frontend: ${FRONTEND_IMAGE}:${BUILD_NUMBER} [Build: ${BUILD_NUMBER}]"
 
-                            # Push securely to GitHub
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
+                    # Push securely to GitHub
+                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
 
-                            # Restore shell logging
-                            set -x
-                            '''
-                        }
-                    }
+                    # Restore shell logging
+                    set -x
+                    '''
                 }
             }
         }
     }
+}
     post {
         always {
             echo 'Cleaning workspace...'
