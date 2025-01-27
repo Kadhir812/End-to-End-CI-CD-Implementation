@@ -15,7 +15,7 @@ spec:
         app: backend
     spec:
       containers:
-      - name: todospring-backend
+      - name: REPLACE_BACKEND_IMAGE
         image:  kadhir812/backend:11  # This will be replaced by Jenkins dynamically
         ports:
         - containerPort: 8080
