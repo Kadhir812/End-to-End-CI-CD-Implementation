@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: todospring-frontend
-        image: kadhir812/todospring-frontend:1
+        image: replaceFrontendImage
         ports:
         - containerPort: 5173
 ---

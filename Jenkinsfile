@@ -19,6 +19,11 @@ pipeline {
         GIT_BRANCH = "master" // Fixed branch name
     }
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
         stage('Checkout Code') {
             steps {
                 git branch: "${GIT_BRANCH}", url: "https://github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}.git"
@@ -107,50 +112,42 @@ pipeline {
                 }
             }
         }
-        stage('Update, Add, Commit, and Push Kubernetes Manifests') {
+        stage('Update Frontend Kubernetes Manifest') {
+            environment {
+                GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
+                GIT_USER_NAME = "kadhir812"
+            }
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     dir(K8S_MANIFEST_DIR) {
-                        script {
-                            // Ensure sensitive commands are not logged
-                            sh 'set +x'
-
-                            // Clean the workspace
-                            sh '''
-                            git reset --hard HEAD
-                            git clean -fd
-                            '''
-
-                            // Configure Git
-                            sh '''
-                            git config --global user.email "${GIT_EMAIL}"
-                            git config --global user.name "${GIT_USER_NAME}"
-                            '''
-
-                            // Update Kubernetes manifests with the new images
-                            sh '''
-                            sed -i "s|REPLACE_BACKEND_IMAGE|${BACKEND_IMAGE}|g" backend-deployment.yaml
-                            sed -i "s|REPLACE_FRONTEND_IMAGE|${FRONTEND_IMAGE}|g" frontend-deployment.yaml
-                            '''
-
-                            // Stage only the modified manifest files
-                            sh '''
-                            git add backend-deployment.yaml frontend-deployment.yaml
-                            '''
-
-                            // Commit the changes
-                            sh '''
-                            git commit -m "Update Kubernetes manifests with new images: backend ${BACKEND_IMAGE}, frontend ${FRONTEND_IMAGE} [Build: ${BUILD_NUMBER}]"
-                            '''
-
-                            // Push to GitHub
-                            sh '''
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
-                            '''
-
-                            // Restore shell logging
-                            sh 'set -x'
-                        }
+                        sh '''
+                        git config user.email "${GIT_EMAIL}"
+                        git config user.name "${GIT_USER_NAME}"
+                        sed -i "s/replaceFrontendImage/${FRONTEND_IMAGE}/g" frontend-deployment.yaml
+                        git add frontend-deployment.yaml
+                        git commit -m "Update frontend deployment image to version ${BUILD_NUMBER}"
+                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Update Backend Kubernetes Manifest') {
+            environment {
+                GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
+                GIT_USER_NAME = "kadhir812"
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    dir(K8S_MANIFEST_DIR) {
+                        sh '''
+                        git config user.email "${GIT_EMAIL}"
+                        git config user.name "${GIT_USER_NAME}"
+                        sed -i "s/replaceBackendImage/${BACKEND_IMAGE}/g" backend-deployment.yaml
+                        git add backend-deployment.yaml
+                        git commit -m "Update backend deployment image to version ${BUILD_NUMBER}"
+                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
+                        '''
                     }
                 }
             }
