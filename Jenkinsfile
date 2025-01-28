@@ -88,6 +88,12 @@ pipeline {
             }
         }
         stage('Build and Test Frontend') {
+            agent {
+                docker {
+                    image 'node:20'
+                    args '--user root'
+                }
+            }
             steps {
                 dir(FRONTEND_DIR) {
                     script {
@@ -126,8 +132,18 @@ pipeline {
                         sh '''
                         git config user.email "${GIT_EMAIL}"
                         git config user.name "${GIT_USER_NAME}"
-                        sed -i 's|replaceFrontendImage|'"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
-                        
+
+                        # Ensure the working directory is clean
+                        git reset --hard HEAD
+                        git clean -fd
+
+                        # Check and replace placeholders if they exist, otherwise update the image field
+                        if grep -q 'replaceFrontendImage' frontend-deployment.yaml; then
+                            sed -i 's|replaceFrontendImage|'"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
+                        else
+                            sed -i 's|image: .*todospring-frontend:.*|image: '"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
+                        fi
+
                         git add frontend-deployment.yaml
                         git commit -m "Update frontend deployment image to version ${BUILD_NUMBER}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
@@ -147,7 +163,18 @@ pipeline {
                         sh '''
                         git config user.email "${GIT_EMAIL}"
                         git config user.name "${GIT_USER_NAME}"
-                        sed -i 's|replaceBackendImage|'"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
+
+                        # Ensure the working directory is clean
+                        git reset --hard HEAD
+                        git clean -fd
+
+                        # Check and replace placeholders if they exist, otherwise update the image field
+                        if grep -q 'replaceBackendImage' backend-deployment.yaml; then
+                            sed -i 's|replaceBackendImage|'"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
+                        else
+                            sed -i 's|image: .*todospring-backend:.*|image: '"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
+                        fi
+
                         git add backend-deployment.yaml
                         git commit -m "Update backend deployment image to version ${BUILD_NUMBER}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
