@@ -16,14 +16,14 @@ spec:
     spec:
       containers:
       - name: todospring-backend
-        image: kadhir812/todospring-backend:4
+        image: kadhir812/todospring-backend:5  # Replace with your image version
         ports:
         - containerPort: 8080
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
         - name: MONGODB_URL
-          value: "mongodb://mongodb:27017/todo_app"  # Corrected to use the MongoDB service name
+          value: "mongodb://mongodb:27017/todo_app"  # MongoDB service name in Kubernetes
         resources:
           limits:
             memory: "512Mi"
@@ -40,7 +40,7 @@ spec:
   selector:
     app: backend
   ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
   type: ClusterIP
