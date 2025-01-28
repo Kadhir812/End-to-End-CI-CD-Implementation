@@ -23,7 +23,7 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
         - name: MONGODB_URL
-          value: "mongodb://mongodb:27017/todo_app"  # Adjust if using another service
+          value: "mongodb://mongodb:27017/todo_app"  # Corrected to use the MongoDB service name
         resources:
           limits:
             memory: "512Mi"
@@ -41,6 +41,6 @@ spec:
     app: backend
   ports:
     - protocol: TCP
-      port: 80
+      port: 8080
       targetPort: 8080
   type: ClusterIP
