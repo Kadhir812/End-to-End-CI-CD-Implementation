@@ -85,10 +85,12 @@ pipeline {
         }
         stage('Build and Test Frontend') {
             steps {
-                docker.image('node:20').inside {
-                    dir(FRONTEND_DIR) {
-                        sh 'npm ci'
-                        sh 'npm run build'
+                script {
+                    docker.image('node:20').inside {
+                        dir(FRONTEND_DIR) {
+                            sh 'npm ci'
+                            sh 'npm run build'
+                        }
                     }
                 }
             }
