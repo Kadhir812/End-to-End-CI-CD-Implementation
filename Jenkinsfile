@@ -34,16 +34,16 @@ pipeline {
                 sh 'chmod -R 755 ${WORKSPACE}'
             }
         }
-        stage('Start MongoDB in Minikube') {
-            steps {
-                sh '''
-                eval $(minikube docker-env)
-                if ! docker ps | grep -q mongodb; then
-                    docker run -d --name mongodb --network ci-cd-network -p 27017:27017 mongo:7.0
-                fi
-                '''
-            }
-        }
+        // stage('Start MongoDB in Minikube') {
+        //     steps {
+        //         sh '''
+        //         eval $(minikube docker-env)
+        //         if ! docker ps | grep -q mongodb; then
+        //             docker run -d --name mongodb --network ci-cd-network -p 27017:27017 mongo:7.0
+        //         fi
+        //         '''
+        //     }
+        // }
         stage('Build and Test Backend') {
             steps {
                 dir(BACKEND_DIR) {
