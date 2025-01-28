@@ -16,7 +16,7 @@ pipeline {
         GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
         GIT_USER_NAME = "kadhir812"
         GIT_EMAIL = "kadhir555666@gmail.com"
-        GIT_BRANCH = "master"
+        GIT_BRANCH = "master" // Fixed branch name
     }
     stages {
         stage('Clean Workspace') {
@@ -31,17 +31,21 @@ pipeline {
         }
         stage('Set Workspace Permissions') {
             steps {
-                sh 'chmod -R 755 ${WORKSPACE}'
+                script {
+                    sh 'chmod -R 755 ${WORKSPACE}'
+                }
             }
         }
         stage('Start MongoDB in Minikube') {
             steps {
-                sh '''
-                eval $(minikube docker-env)
-                if ! docker ps | grep -q mongodb; then
-                    docker run -d --name mongodb --network ci-cd-network -p 27017:27017 mongo:7.0
-                fi
-                '''
+                script {
+                    sh 'eval $(minikube docker-env)'
+                    sh '''
+                    if ! docker ps | grep -q mongodb; then
+                        docker run -d --name mongodb --network ci-cd-network -p 27017:27017 mongo:7.0
+                    fi
+                    '''
+                }
             }
         }
         stage('Build and Test Backend') {
@@ -87,11 +91,17 @@ pipeline {
             agent {
                 docker {
                     image 'node:20'
+                    args '--user root'
                 }
             }
             steps {
                 dir(FRONTEND_DIR) {
-                    sh 'npm ci'
+                    try {
+                        sh 'npm ci'
+                    } catch (Exception e) {
+                        echo 'npm ci failed, falling back to npm install'
+                        sh 'npm install'
+                    }
                     sh 'npm run build'
                 }
             }
@@ -110,21 +120,28 @@ pipeline {
             }
         }
         stage('Update Frontend Kubernetes Manifest') {
+            environment {
+                GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
+                GIT_USER_NAME = "kadhir812"
+            }
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     dir(K8S_MANIFEST_DIR) {
                         sh '''
                         git config user.email "${GIT_EMAIL}"
                         git config user.name "${GIT_USER_NAME}"
+                        
+                        # Ensure the working directory is clean
                         git reset --hard HEAD
                         git clean -fd
-                        
+
+                        # Check and replace placeholders if they exist, otherwise update the image field
                         if grep -q 'replaceFrontendImage' frontend-deployment.yaml; then
                             sed -i 's|replaceFrontendImage|'"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
                         else
                             sed -i 's|image: .*todospring-frontend:.*|image: '"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
                         fi
-                        
+
                         git add frontend-deployment.yaml
                         git commit -m "Update frontend deployment image to version ${BUILD_NUMBER}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
@@ -134,21 +151,28 @@ pipeline {
             }
         }
         stage('Update Backend Kubernetes Manifest') {
+            environment {
+                GIT_REPO_NAME = "End-to-End-CI-CD-Implementation"
+                GIT_USER_NAME = "kadhir812"
+            }
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     dir(K8S_MANIFEST_DIR) {
                         sh '''
                         git config user.email "${GIT_EMAIL}"
                         git config user.name "${GIT_USER_NAME}"
+                        
+                        # Ensure the working directory is clean
                         git reset --hard HEAD
                         git clean -fd
-                        
+
+                        # Check and replace placeholders if they exist, otherwise update the image field
                         if grep -q 'replaceBackendImage' backend-deployment.yaml; then
                             sed -i 's|replaceBackendImage|'"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
                         else
                             sed -i 's|image: .*todospring-backend:.*|image: '"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
                         fi
-                        
+
                         git add backend-deployment.yaml
                         git commit -m "Update backend deployment image to version ${BUILD_NUMBER}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
