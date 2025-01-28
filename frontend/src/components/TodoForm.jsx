@@ -12,23 +12,25 @@ function TodoForm({ onAdd }) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4 bg-gray-100 p-4 rounded-md shadow-md">
+        <form onSubmit={handleSubmit} className="space-y-3 bg-gradient-to-r from-purple-50 to-indigo-50 p-5 rounded-lg shadow-md border border-purple-100 max-w-md mx-auto">
+            <h2 className="text-xl font-bold text-purple-800 mb-3">Add a New Task</h2>
             <input
-                className="w-full border-2 border-gray-300 p-2 rounded-md focus:border-blue-500"
+                className="w-full border border-purple-200 p-2 rounded-md focus:border-purple-500 focus:ring-1 focus:ring-purple-200 transition duration-200 text-sm"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Task Title"
                 required
             />
             <textarea
-                className="w-full border-2 border-gray-300 p-2 rounded-md focus:border-blue-500"
+                className="w-full border border-purple-200 p-2 rounded-md focus:border-purple-500 focus:ring-1 focus:ring-purple-200 transition duration-200 text-sm"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Task Description"
+                rows="3"
             />
             <button
                 type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-md transition duration-300"
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-2 rounded-md shadow-sm hover:shadow-md transition duration-300 text-sm"
             >
                 Add Task
             </button>
