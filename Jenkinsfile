@@ -123,11 +123,30 @@ pipeline {
                         sh '''
                         git config user.email "${GIT_EMAIL}"
                         git config user.name "${GIT_USER_NAME}"
+
+                        # Fetch latest changes and reset
+                        git fetch origin ${GIT_BRANCH}
+                        git reset --hard origin/${GIT_BRANCH}
+
+                        # Debug: Print file contents before sed
+                        echo "Before sed:"
+                        cat frontend-deployment.yaml
+
+                        # Replace placeholder
                         sed -i 's|replaceFrontendImage|'"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
 
-                        git add frontend-deployment.yaml
-                        git commit -m "Update frontend deployment image to version ${BUILD_NUMBER}"
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
+                        # Debug: Print file contents after sed
+                        echo "After sed:"
+                        cat frontend-deployment.yaml
+
+                        # Check for changes before committing
+                        if git diff --quiet --exit-code; then
+                            echo "No changes to commit."
+                        else
+                            git add frontend-deployment.yaml
+                            git commit -m "Update frontend deployment image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
+                        fi
                         '''
                     }
                 }
@@ -144,10 +163,30 @@ pipeline {
                         sh '''
                         git config user.email "${GIT_EMAIL}"
                         git config user.name "${GIT_USER_NAME}"
+
+                        # Fetch latest changes and reset
+                        git fetch origin ${GIT_BRANCH}
+                        git reset --hard origin/${GIT_BRANCH}
+
+                        # Debug: Print file contents before sed
+                        echo "Before sed:"
+                        cat backend-deployment.yaml
+
+                        # Replace placeholder
                         sed -i 's|replaceBackendImage|'"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
-                        git add backend-deployment.yaml
-                        git commit -m "Update backend deployment image to version ${BUILD_NUMBER}"
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
+
+                        # Debug: Print file contents after sed
+                        echo "After sed:"
+                        cat backend-deployment.yaml
+
+                        # Check for changes before committing
+                        if git diff --quiet --exit-code; then
+                            echo "No changes to commit."
+                        else
+                            git add backend-deployment.yaml
+                            git commit -m "Update backend deployment image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
+                        fi
                         '''
                     }
                 }
