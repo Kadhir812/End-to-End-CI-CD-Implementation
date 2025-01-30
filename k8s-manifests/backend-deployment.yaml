@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: todospring-backend
-        image: kadhir812/todospring-backend:5  # Replace with your image version
+        image: kadhir812/todospring-backend:5
         ports:
         - containerPort: 8080
         env:
