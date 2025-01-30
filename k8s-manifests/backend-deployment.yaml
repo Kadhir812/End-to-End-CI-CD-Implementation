@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend-deployment
-  labels:
-    app: backend
 spec:
   replicas: 1
   selector:
@@ -23,7 +21,7 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
         - name: MONGODB_URL
-          value: "mongodb://mongodb:27017/todo_app"  # MongoDB service name in Kubernetes
+          value: "mongodb://mongodb:27017/todo_app"  # MongoDB connection string without credentials
         resources:
           limits:
             memory: "512Mi"
@@ -31,16 +29,15 @@ spec:
           requests:
             memory: "256Mi"
             cpu: "250m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: backend-service
-spec:
-  selector:
-    app: backend
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8080
-  type: ClusterIP
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
