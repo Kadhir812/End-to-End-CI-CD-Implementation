@@ -9,7 +9,7 @@ pipeline {
         FRONTEND_DIR = "frontend"
         BACKEND_DIR = "backend"
         K8S_MANIFEST_DIR = "k8s-manifests"
-        SONAR_URL = "http://192.168.0.55:9000"
+        SONAR_URL = "http://10.0.1.190:9000"
         DOCKER_REGISTRY = "kadhir812"
         BACKEND_IMAGE = "${DOCKER_REGISTRY}/todospring-backend:${BUILD_NUMBER}"
         FRONTEND_IMAGE = "${DOCKER_REGISTRY}/todospring-frontend:${BUILD_NUMBER}"
