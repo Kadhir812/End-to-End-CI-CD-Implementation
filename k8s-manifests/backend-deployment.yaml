@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: todospring-backend
-        image: kadhir812/todospring-backend:5  # Update with your latest image
+        image: kadhir812/todospring-backend:16
         ports:
         - containerPort: 9090  # Change from 8080 to 9090
         env:
