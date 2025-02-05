@@ -21,7 +21,9 @@ pipeline {
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()
+                node {
+                    cleanWs()
+                }
             }
         }
         stage('Checkout Code') {
@@ -51,8 +53,8 @@ pipeline {
         }
         stage('Static Code Analysis (Backend)') {
             steps {
-                withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
-                    node {
+                node {
+                    withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
                         dir(BACKEND_DIR) {
                             sh '''
                             mvn sonar:sonar \
@@ -108,8 +110,8 @@ pipeline {
         }
         stage('Update Frontend Kubernetes Manifest') {
             steps {
-                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    node {
+                node {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                         dir(K8S_MANIFEST_DIR) {
                             sh '''
                             git config user.email "${GIT_EMAIL}"
@@ -134,8 +136,8 @@ pipeline {
         }
         stage('Update Backend Kubernetes Manifest') {
             steps {
-                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    node {
+                node {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                         dir(K8S_MANIFEST_DIR) {
                             sh '''
                             git config user.email "${GIT_EMAIL}"
@@ -161,8 +163,10 @@ pipeline {
     }
     post {
         always {
-            echo 'Cleaning workspace...'
-            cleanWs()
+            node {
+                echo 'Cleaning workspace...'
+                cleanWs()
+            }
         }
         success {
             echo 'Pipeline completed successfully!'
