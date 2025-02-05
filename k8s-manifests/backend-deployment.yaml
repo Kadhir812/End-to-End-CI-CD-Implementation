@@ -14,14 +14,14 @@ spec:
     spec:
       containers:
       - name: todospring-backend
-        image: kadhir812/todospring-backend:5  # Replace with your image version
+        image: kadhir812/todospring-backend:5  # Update with your latest image
         ports:
-        - containerPort: 8080
+        - containerPort: 9090  # Change from 8080 to 9090
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
         - name: MONGODB_URL
-          value: "mongodb://mongodb:27017/todo_app"  # MongoDB connection string without credentials
+          value: "mongodb://mongodb:27017/todo_app"  # Update with MongoDB connection string
         resources:
           limits:
             memory: "512Mi"
@@ -32,12 +32,12 @@ spec:
         livenessProbe:
           httpGet:
             path: /actuator/health
-            port: 8080
+            port: 9090  # Update to match new backend port
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /actuator/health
-            port: 8080
+            port: 9090  # Update to match new backend port
           initialDelaySeconds: 10
           periodSeconds: 10

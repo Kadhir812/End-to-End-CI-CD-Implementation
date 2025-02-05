@@ -4,8 +4,8 @@ metadata:
   name: frontend
 spec:
   ports:
-  - port: 80
-    targetPort: 5173
+  - port: 80         # Exposed port
+    targetPort: 5173  # Container port where the frontend is running
   selector:
     app: frontend
   type: ClusterIP

@@ -19,7 +19,7 @@ spec:
         - containerPort: 5173
         env:
         - name: BACKEND_URL
-          value: "http://backend-service:80"  # Backend service name
+          value: "http://backend:80"  # Update to use the backend service name (`backend` without the `-service` suffix)
         resources:
           limits:
             memory: "256Mi"

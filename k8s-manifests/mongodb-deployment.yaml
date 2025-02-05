@@ -49,4 +49,4 @@ spec:
       volumes:
       - name: mongo-data
         persistentVolumeClaim:
-          claimName: mongo-pvc
+          claimName: mongo-pvc  # Ensure the PVC is defined separately
