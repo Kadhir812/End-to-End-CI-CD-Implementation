@@ -34,21 +34,13 @@ pipeline {
                 sh 'chmod -R 755 ${WORKSPACE}'
             }
         }
-        // stage('Start MongoDB in Minikube') {
-        //     steps {
-        //         sh '''
-        //         eval $(minikube docker-env)
-        //         if ! docker ps | grep -q mongodb; then
-        //             docker run -d --name mongodb --network ci-cd-network -p 27017:27017 mongo:7.0
-        //         fi
-        //         '''
-        //     }
-        // }
         stage('Build and Test Backend') {
             steps {
-                dir(BACKEND_DIR) {
-                    sh 'mvn clean package'
-                    sh 'mvn test'
+                node {
+                    dir(BACKEND_DIR) {
+                        sh 'mvn clean package'
+                        sh 'mvn test'
+                    }
                 }
             }
             post {
@@ -60,25 +52,29 @@ pipeline {
         stage('Static Code Analysis (Backend)') {
             steps {
                 withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
-                    dir(BACKEND_DIR) {
-                        sh '''
-                        mvn sonar:sonar \
-                            -Dsonar.login=${SONAR_AUTH_TOKEN} \
-                            -Dsonar.host.url=${SONAR_URL}
-                        '''
+                    node {
+                        dir(BACKEND_DIR) {
+                            sh '''
+                            mvn sonar:sonar \
+                                -Dsonar.login=${SONAR_AUTH_TOKEN} \
+                                -Dsonar.host.url=${SONAR_URL}
+                            '''
+                        }
                     }
                 }
             }
         }
         stage('Build and Push Backend Docker Image') {
             steps {
-                dir(BACKEND_DIR) {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh '''
-                        docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
-                        docker build -t ${BACKEND_IMAGE} .
-                        docker push ${BACKEND_IMAGE}
-                        '''
+                node {
+                    dir(BACKEND_DIR) {
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                            sh '''
+                            docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+                            docker build -t ${BACKEND_IMAGE} .
+                            docker push ${BACKEND_IMAGE}
+                            '''
+                        }
                     }
                 }
             }
@@ -97,13 +93,15 @@ pipeline {
         }
         stage('Build and Push Frontend Docker Image') {
             steps {
-                dir(FRONTEND_DIR) {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh '''
-                        docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
-                        docker build -t ${FRONTEND_IMAGE} .
-                        docker push ${FRONTEND_IMAGE}
-                        '''
+                node {
+                    dir(FRONTEND_DIR) {
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                            sh '''
+                            docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+                            docker build -t ${FRONTEND_IMAGE} .
+                            docker push ${FRONTEND_IMAGE}
+                            '''
+                        }
                     }
                 }
             }
@@ -111,23 +109,25 @@ pipeline {
         stage('Update Frontend Kubernetes Manifest') {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    dir(K8S_MANIFEST_DIR) {
-                        sh '''
-                        git config user.email "${GIT_EMAIL}"
-                        git config user.name "${GIT_USER_NAME}"
-                        git reset --hard HEAD
-                        git clean -fd
-                        
-                        if grep -q 'replaceFrontendImage' frontend-deployment.yaml; then
-                            sed -i 's|replaceFrontendImage|'"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
-                        else
-                            sed -i 's|image: .*todospring-frontend:.*|image: '"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
-                        fi
-                        
-                        git add frontend-deployment.yaml
-                        git commit -m "Update frontend deployment image to version ${BUILD_NUMBER}" || true
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
-                        '''
+                    node {
+                        dir(K8S_MANIFEST_DIR) {
+                            sh '''
+                            git config user.email "${GIT_EMAIL}"
+                            git config user.name "${GIT_USER_NAME}"
+                            git reset --hard HEAD
+                            git clean -fd
+
+                            if grep -q 'replaceFrontendImage' frontend-deployment.yaml; then
+                                sed -i 's|replaceFrontendImage|'"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
+                            else
+                                sed -i 's|image: .*todospring-frontend:.*|image: '"${FRONTEND_IMAGE}"'|g' frontend-deployment.yaml
+                            fi
+
+                            git add frontend-deployment.yaml
+                            git commit -m "Update frontend deployment image to version ${BUILD_NUMBER}" || true
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
+                            '''
+                        }
                     }
                 }
             }
@@ -135,23 +135,25 @@ pipeline {
         stage('Update Backend Kubernetes Manifest') {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    dir(K8S_MANIFEST_DIR) {
-                        sh '''
-                        git config user.email "${GIT_EMAIL}"
-                        git config user.name "${GIT_USER_NAME}"
-                        git reset --hard HEAD
-                        git clean -fd
-                        
-                        if grep -q 'replaceBackendImage' backend-deployment.yaml; then
-                            sed -i 's|replaceBackendImage|'"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
-                        else
-                            sed -i 's|image: .*todospring-backend:.*|image: '"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
-                        fi
-                        
-                        git add backend-deployment.yaml
-                        git commit -m "Update backend deployment image to version ${BUILD_NUMBER}" || true
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
-                        '''
+                    node {
+                        dir(K8S_MANIFEST_DIR) {
+                            sh '''
+                            git config user.email "${GIT_EMAIL}"
+                            git config user.name "${GIT_USER_NAME}"
+                            git reset --hard HEAD
+                            git clean -fd
+
+                            if grep -q 'replaceBackendImage' backend-deployment.yaml; then
+                                sed -i 's|replaceBackendImage|'"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
+                            else
+                                sed -i 's|image: .*todospring-backend:.*|image: '"${BACKEND_IMAGE}"'|g' backend-deployment.yaml
+                            fi
+
+                            git add backend-deployment.yaml
+                            git commit -m "Update backend deployment image to version ${BUILD_NUMBER}" || true
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:${GIT_BRANCH}
+                            '''
+                        }
                     }
                 }
             }
