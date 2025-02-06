@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: kadhir812/todospring-backend:16
+          image: kadhir812/todospring-backend:21
           ports:
             - containerPort: 9090
           env:
