@@ -1,12 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend
-  namespace: frontend   # Add namespace here
+  name: frontend-service
+  namespace: frontend
 spec:
-  ports:
-  - port: 80         # Exposed port
-    targetPort: 5173  # Container port where the frontend is running
   selector:
     app: frontend
-  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5173
+  type: ClusterIP 

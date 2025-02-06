@@ -2,12 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
-  namespace: backend   # Add namespace here
+  namespace: backend
 spec:
   selector:
     app: backend
   ports:
-  - protocol: TCP
-    port: 80          # Exposed service port
-    targetPort: 9090  # Matches the backend container port
-  type: ClusterIP
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+  type: ClusterIP  # Internal service for communication within the cluster

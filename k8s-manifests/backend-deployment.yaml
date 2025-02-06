@@ -1,8 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
-  namespace: backend   # Add namespace here
+  name: backend
+  namespace: backend
 spec:
   replicas: 1
   selector:
@@ -14,31 +14,12 @@ spec:
         app: backend
     spec:
       containers:
-      - name: todospring-backend
-        image: kadhir812/todospring-backend:16
-        ports:
-        - containerPort: 9090  # Change from 8080 to 9090
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
-        - name: MONGODB_URL
-          value: "mongodb://mongodb:27017/todo_app"  # Update with MongoDB connection string
-        resources:
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 9090  # Update to match new backend port
-          initialDelaySeconds: 10
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 9090  # Update to match new backend port
-          initialDelaySeconds: 10
-          periodSeconds: 10
+        - name: backend
+          image: kadhir812/todospring-backend:16
+          ports:
+            - containerPort: 9090
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+            - name: MONGODB_URL
+              value: "mongodb://mongodb:27017/todo_app"

@@ -1,8 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mongo-pvc
-  namespace: mongodb   # Add namespace here
+  name: mongodb-pvc
 spec:
   accessModes:
     - ReadWriteOnce

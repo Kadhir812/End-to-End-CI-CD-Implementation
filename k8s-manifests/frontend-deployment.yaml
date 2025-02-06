@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: frontend   # Add namespace here
+  namespace: frontend
 spec:
   replicas: 1
   selector:
@@ -14,29 +14,10 @@ spec:
         app: frontend
     spec:
       containers:
-      - name: todospring-frontend
-        image: kadhir812/todospring-frontend:16
-        ports:
-        - containerPort: 5173
-        env:
-        - name: BACKEND_URL
-          value: "http://backend:80"  # Update to use the backend service name (`backend` without the `-service` suffix)
-        resources:
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
-          requests:
-            memory: "128Mi"
-            cpu: "250m"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 5173
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 5173
-          initialDelaySeconds: 5
-          periodSeconds: 10
+        - name: frontend
+          image: kadhir812/todospring-frontend:16
+          ports:
+            - containerPort: 5173
+          env:
+            - name: BACKEND_URL
+              value: "http://backend:80"
