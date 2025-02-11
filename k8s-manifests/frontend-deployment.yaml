@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: frontend
+  namespace: frontend  # Ensure backend is in the same namespace or use full service name
 spec:
   replicas: 1
   selector:
@@ -20,4 +20,4 @@ spec:
             - containerPort: 5173
           env:
             - name: BACKEND_URL
-              value: "http://backend:9090"
+              value: "http://backend-service.frontend.svc.cluster.local:8081/api/todos"

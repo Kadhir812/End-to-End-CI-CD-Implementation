@@ -17,9 +17,7 @@ spec:
         - name: backend
           image: kadhir812/todospring-backend:21
           ports:
-            - containerPort: 9090
+            - containerPort: 8080
           env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: "prod"
             - name: MONGODB_URL
-              value: "mongodb://mongodb:27017/todo_app"
+              value: "mongodb://mongodb-service:27017/todo_app"

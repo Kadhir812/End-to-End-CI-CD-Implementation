@@ -5,26 +5,47 @@ import TodoItem from '../components/TodoItem';
 
 function HomePage() {
     const [todos, setTodos] = useState([]);
+    
+    // Use proxy-friendly API base URL
+    const API_BASE_URL = "/api/todos";
 
     const fetchTodos = async () => {
-        const response = await axios.get("http://localhost:8080/api/todos");
-        setTodos(response.data);
+        try {
+            const response = await axios.get(API_BASE_URL);
+            setTodos(response.data);
+        } catch (error) {
+            console.error("Error fetching todos:", error);
+        }
     };
 
     const addTodo = async (todo) => {
-        const response = await axios.post("http://localhost:8080/api/todos", todo);
-        setTodos([...todos, response.data]);
+        try {
+            const response = await axios.post(API_BASE_URL, todo);
+            setTodos([...todos, response.data]);
+        } catch (error) {
+            console.error("Error adding todo:", error);
+        }
     };
 
     const deleteTodo = async (id) => {
-        await axios.delete(`http://localhost:8080/api/todos/${id}`);
-        setTodos(todos.filter((todo) => todo.id !== id));
+        try {
+            await axios.delete(`${API_BASE_URL}/${id}`);
+            setTodos(todos.filter((todo) => todo.id !== id));
+        } catch (error) {
+            console.error("Error deleting todo:", error);
+        }
     };
 
     const toggleTodo = async (id) => {
-        const todo = todos.find((t) => t.id === id);
-        const response = await axios.put(`http://localhost:8080/api/todos/${id}`, { ...todo, completed: !todo.completed });
-        setTodos(todos.map((t) => (t.id === id ? response.data : t)));
+        try {
+            const todo = todos.find((t) => t.id === id);
+            const response = await axios.put(`${API_BASE_URL}/${id}`, 
+                { ...todo, completed: !todo.completed }
+            );
+            setTodos(todos.map((t) => (t.id === id ? response.data : t)));
+        } catch (error) {
+            console.error("Error toggling todo:", error);
+        }
     };
 
     useEffect(() => {
@@ -38,7 +59,12 @@ function HomePage() {
             <div className="space-y-4">
                 {todos.length ? (
                     todos.map((todo) => (
-                        <TodoItem key={todo.id} todo={todo} onDelete={deleteTodo} onToggle={toggleTodo} />
+                        <TodoItem 
+                            key={todo.id} 
+                            todo={todo} 
+                            onDelete={deleteTodo} 
+                            onToggle={toggleTodo} 
+                        />
                     ))
                 ) : (
                     <p className="text-center text-gray-500">No tasks available. Add a new task above.</p>

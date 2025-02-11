@@ -5,7 +5,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // This enables binding to 0.0.0.0
-    port: 5173, // Optional: Ensure it matches your Docker port mapping
-  },
+    host: true, // Enables binding to 0.0.0.0
+    port: 5173, // Ensure it matches Docker port mapping
+    proxy: {
+      '/api': {
+        target: 'http://backend-service.backend.svc.cluster.local:8081', // Use Kubernetes Service DNS
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
 })
