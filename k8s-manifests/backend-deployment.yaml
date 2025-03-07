@@ -20,4 +20,16 @@ spec:
             - containerPort: 8080
           env:
             - name: MONGODB_URL
-              value: "mongodb://mongodb-service:27017/todo_app"
+              value: "mongodb://mongodb-service.backend.svc.cluster.local:27017/todo_app"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
