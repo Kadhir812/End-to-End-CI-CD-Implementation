@@ -36,7 +36,10 @@ jobs:
           SONAR_AUTH_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
         run: |
           cd $BACKEND_DIR
-          mvn sonar:sonar -Dsonar.login=${SONAR_AUTH_TOKEN} -Dsonar.host.url=${SONAR_URL}
+          mvn sonar:sonar \
+            -Dsonar.projectKey=todo_app \
+            -Dsonar.host.url=${SONAR_URL} \
+            -Dsonar.login=${SONAR_AUTH_TOKEN}
 
       - name: Build and Push Backend Docker Image
         env:
@@ -110,6 +113,3 @@ jobs:
       - name: Failure Notification
         if: failure()
         run: echo "Pipeline failed. Check logs for details."
-
-
-# Let me know if you want me to tweak anything further! 🚀
