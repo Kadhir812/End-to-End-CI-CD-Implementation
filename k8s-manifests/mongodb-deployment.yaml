@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: mongodb
-          image: mongo:7.2  # Updated to the latest version
+          image: mongo:8.0  # Updated to the latest version
           ports:
             - containerPort: 27017
           env:
