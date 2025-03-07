@@ -14,7 +14,7 @@ jobs:
 
     env:
       BACKEND_DIR: backend
-      SONAR_URL: http://192.168.0.55:9000
+      SONAR_URL: http://192.168.215.55:9000
       DOCKER_REGISTRY: kadhir812
       BACKEND_IMAGE: kadhir812/todospring-backend:${{ github.run_number }}
 
