@@ -9,7 +9,7 @@ export default defineConfig({
     port: 5173, // Ensure it matches Docker port mapping
     proxy: {
       '/api': {
-        target: 'http://backend-service.backend.svc.cluster.local:8081', // Use Kubernetes Service DNS
+        target: 'http://backend-service.backend.svc.cluster.local:8080', // Use Kubernetes Service DNS
         changeOrigin: true,
         secure: false
       }

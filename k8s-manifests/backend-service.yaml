@@ -8,7 +8,7 @@ spec:
     app: backend
   ports:
     - protocol: TCP
-      port: 8081
+      port: 8080
       targetPort: 8080
       
   type: ClusterIP  # Internal service for communication within the cluster

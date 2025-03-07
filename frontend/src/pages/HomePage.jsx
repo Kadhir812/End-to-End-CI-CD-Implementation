@@ -5,7 +5,7 @@ import TodoItem from '../components/TodoItem';
 
 function HomePage() {
     const [todos, setTodos] = useState([]);
-    
+
     // Use proxy-friendly API base URL
     const API_BASE_URL = "/api/todos";
 

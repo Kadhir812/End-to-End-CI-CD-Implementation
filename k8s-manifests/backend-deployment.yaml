@@ -20,7 +20,7 @@ spec:
             - containerPort: 8080
           env:
             - name: MONGODB_URL
-              value: "mongodb://mongodb-service.backend.svc.cluster.local:27017/todo_app"
+              value: mongodb://admin:Tron@1234@mongodb-service.backend.svc.cluster.local:27017/todo_app?authSource=admin
           livenessProbe:
             httpGet:
               path: /actuator/health
