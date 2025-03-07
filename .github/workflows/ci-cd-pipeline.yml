@@ -22,8 +22,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Set Permissions
-        run: chmod -R 755 ${{ github.workspace }}
+      # - name: Set Permissions
+      #   run: chmod -R 755 ${{ github.workspace }}
 
 
       - name: Build and Test Backend
