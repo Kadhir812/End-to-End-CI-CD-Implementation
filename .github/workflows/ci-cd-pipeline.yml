@@ -14,7 +14,6 @@ jobs:
 
     env:
       BACKEND_DIR: backend
-      SONAR_URL: http://192.168.215.55:9000
       DOCKER_REGISTRY: kadhir812
       BACKEND_IMAGE: kadhir812/todospring-backend:${{ github.run_number }}
 
@@ -39,7 +38,7 @@ jobs:
           cd $BACKEND_DIR
           mvn sonar:sonar \
             -Dsonar.projectKey=todo_app \
-            -Dsonar.host.url=${SONAR_URL} \
+            -Dsonar.host.url=http://192.168.215.55:9000 \
             -Dsonar.login=${SONAR_AUTH_TOKEN}
 
       - name: Build and Push Backend Docker Image
