@@ -21,24 +21,6 @@ spec:
           volumeMounts:
             - name: mongodb-storage
               mountPath: /data/db
-
-          # Simplified probes (no auth)
-          livenessProbe:
-            exec:
-              command: ["mongosh", "--eval", "db.adminCommand('ping')"]
-            initialDelaySeconds: 30
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 5
-
-          readinessProbe:
-            exec:
-              command: ["mongosh", "--eval", "db.adminCommand('ping')"]
-            initialDelaySeconds: 30
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 3
-
       volumes:
         - name: mongodb-storage
           persistentVolumeClaim:
